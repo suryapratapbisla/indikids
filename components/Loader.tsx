@@ -2,34 +2,56 @@
 
 import { useEffect, useState } from "react";
 
+const LOADER_MESSAGES = [
+  "Designing a happy day…",
+];
+
 export default function Loader() {
-  const [done, setDone] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
+  const [isExiting, setIsExiting] = useState(false);
+  const [message] = useState(() => {
+    // Pick a stable random message per mount
+    const idx = Math.floor(Math.random() * LOADER_MESSAGES.length);
+    return LOADER_MESSAGES[idx];
+  });
 
   useEffect(() => {
-    const id = setTimeout(() => setDone(true), 1300);
-    return () => clearTimeout(id);
+    // Short delay before exit so it’s visible but not annoying
+    const exitTimer = setTimeout(() => {
+      setIsExiting(true);
+    }, 1100);
+
+    // Remove from DOM after fade-out
+    const hideTimer = setTimeout(() => {
+      setIsMounted(false);
+    }, 1600);
+
+    return () => {
+      clearTimeout(exitTimer);
+      clearTimeout(hideTimer);
+    };
   }, []);
 
-  if (done) return null;
+  if (!isMounted) return null;
 
   return (
-    <div className="loader-overlay">
-      {/* <div className="loader-inner"> */}
-        {/* Logo */}
-        <img
-          src="/logo/small.jpg"
-          alt="IndiKids Logo"
-          className="loader-logo"
-        />
-
-        {/* Glowing orb */}
-        <div className="loader-orb" />
-
-        {/* Text */}
-        <p className="loader-text">
-          Designing a happy day…
-        </p>
-      {/* </div> */}
+    <div
+      className={`loader-overlay ${isExiting ? "loader-overlay-exit" : ""}`}
+      role="status"
+      aria-live="polite"
+      aria-label="Loading Indikids Preschool website"
+    >
+      <div className="loader-inner">
+        <div className="loader-orb">
+          {/* make sure this path exists: /public/logo/small.jpg */}
+          <img
+            src="/logo/small.jpg"
+            className="loader-logo"
+            alt="Indikids Preschool logo"
+          />
+        </div>
+        <p className="loader-text">{message}</p>
+      </div>
     </div>
   );
 }
